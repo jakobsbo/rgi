@@ -1,4 +1,3 @@
-
 var vote_data = [];
 var collection_data = [];
 var review_data = [];
@@ -20,6 +19,26 @@ document.addEventListener("DOMContentLoaded", function (event) {
     clipboard.on("error", function (e) {
       console.log(e);
     });
+
+    let inline_timer = null;
+    $("#wf-form-edit-collection").on(
+      "keyup change paste",
+      "input, select, textarea",
+      function () {
+        clearTimeout(inline_timer);
+        inline_timer = setTimeout(function () {
+          console.log("Form changed!");
+          updateCollection(
+            "content",
+            selected.collection_id,
+            esc($("[create-collection-name]").val()),
+            esc($("[create-collection-description]").val()),
+            $("[create-collection-checkbox]").is(":checked")
+          );
+          success("Collection updated.");
+        }, 1200);
+      }
+    );
 
     MemberStack.onReady.then(async function (member) {
       if (memberstack.isAuthenticated) {
@@ -423,257 +442,234 @@ function editCollection(id) {
   listItems();
 }
 
-  let inline_timer = null;
-  $("#wf-form-edit-collection").on(
-    "keyup change paste",
-    "input, select, textarea",
-    function () {
-      clearTimeout(inline_timer);
-      inline_timer = setTimeout(function () {
-        console.log("Form changed!");
-        updateCollection(
-          "content",
-          selected.collection_id,
-          esc($("[create-collection-name]").val()),
-          esc($("[create-collection-description]").val()),
-          $("[create-collection-checkbox]").is(":checked")
-        );
-        success("Collection updated.");
-      }, 1200);
-    }
-  );
+function listItems() {
+  $("[item-clone]").each(function (index) {
+    $(this).remove();
+    console.log("removing a clone" + index);
+  });
 
-  function listItems() {
-    $("[item-clone]").each(function (index) {
-      $(this).remove();
-      console.log("removing a clone" + index);
-    });
+  var original = $("[item-original]");
+  original.hide();
 
-    var original = $("[item-original]");
-    original.hide();
-
-    for (i = 0; i < selected.collection_items.length; i++) {
-      console.log("creating a new div");
-      original.clone().appendTo("[items-list]");
-    }
-
-    $("[item-div]").each(function (index) {
-      if (index == 0) {
-        $(this).hide();
-        console.log("hiding original" + index);
-      } else {
-        console.log("changing clone" + index);
-        $(this).attr("item-clone", "true");
-        $(this).removeAttr("item-original");
-        $(this)
-          .find("[item-name]")
-          .text(selected.collection_items[index - 1].name);
-        $(this)
-          .find("[item-name]")
-          .attr("href", selected.collection_items[index - 1].link);
-        $(this)
-          .find("[item-delete]")
-          .attr("item", selected.collection_items[index - 1].id);
-        $(this)
-          .find("[item-delete]")
-          .attr("collection", selected.collection_id);
-
-        $(this)
-          .find("[item-dropdown]")
-          .attr("id", "dropdown" + selected.collection_items[index - 1].id);
-        $(this)
-          .find("[item-toggle]")
-          .attr("id", "toggle" + selected.collection_items[index - 1].id);
-        $(this)
-          .find("[item-list]")
-          .attr("id", "list" + selected.collection_items[index - 1].id);
-
-        $(this)
-          .find("[item-delete]")
-          .click(function () {
-            var collection = $(this).attr("collection");
-            selected.id = $(this).attr("item");
-            updateCollection("remove", collection, "unset", "unset", "unset");
-          });
-
-        $(this).fadeIn(index * 50);
-      }
-    });
+  for (i = 0; i < selected.collection_items.length; i++) {
+    console.log("creating a new div");
+    original.clone().appendTo("[items-list]");
   }
 
-  $("[view-collections-close]").click(function () {
-    hideBottomBar();
-  });
-
-  $("[back-to-collections]").click(function () {
-    setEdit("");
-    $("[bar-edit-collection]").hide();
-    $("[bar-view-collections]").fadeIn(300);
-    listCollections();
-  });
-
-  $("[edit-collection-close]").click(function () {
-    setEdit("");
-    hideBottomBar();
-  });
-
-  $("[add-item-button]").click(function () {
-    var id = $(this).attr("add-item-button");
-    console.log("adding" + id);
-    updateCollection("add", id, "unset", "unset", "unset");
-    $("[add-item-button]").hide();
-  });
-
-  $("[rate-value]").click(function () {
-    var value = $(this).attr("rate-value");
-    console.log("rate-value clicked" + value);
-
-    $(this)
-      .closest("[rate-check-div]")
-      .find(".rate-check")
-      .each(function (index) {
-        var rate = $(this);
-        var number = rate.find("[rate-value]").attr("rate-value");
-        var button = rate.find(".rate-check-button");
-        if (number < value + 1) {
-          rate.removeClass("grey");
-        } else {
-          rate.addClass("grey");
-        }
-      });
-    $(this).closest("[rate-check-div]").find("[rate-field]").val(value);
-    $("[rate-submit-btn]").show();
-    $(this).attr("checked", false);
-  });
-
-  $("[hide-modals]").click(function () {
-    hideModals();
-  });
-
-  $("[create-collection-button]").click(function () {
-    $("[modals-div]").css("display", "flex");
-    $("[bar-view-collections]").hide();
-    $("[modal-collection]").fadeIn(300);
-  });
-
-  $("[hide-create-collection]").click(function () {
-    $("[modal-collections]").fadeIn(300);
-    $("[modal-collection]").fadeOut(100);
-  });
-
-  $("[review-div]").click(function () {
-    var id = $(this).closest("[counter-div]").find("[counter-id]").text();
-    var name = $(this).closest("[counter-div]").find("[counter-name]").text();
-    var link = $(this).closest("[counter-div]").find("[counter-link]").text();
-    selectItem(id, name, link, "review");
-    $("[modals-div]").css("display", "flex");
-    $("[modal-review]").fadeIn(200);
-  });
-
-  $("[share-div]").click(function () {
-    if (memberstack.isAuthenticated) {
-      shareItem(
-        $(this).attr("item-id"),
-        $(this).attr("item-name"),
-        $(this).attr("item-link"),
-        $(this).attr("item-image")
-      );
-    }
-    $(this).text(Number($(this).text()) + 1);
-    $("[modals-div]").css("display", "flex");
-    $("[modal-share]").fadeIn(200);
-  });
-
-  $("[vote-div]").click(function () {
-    if (memberstack.isAuthenticated) {
-      voteItem(
-        $(this).attr("item-id"),
-        $(this).attr("item-name"),
-        $(this).attr("item-link")
-      );
-      if ($(this).hasClass("active")) {
-        $(this).text(Number($(this).text()) - 1);
-      } else {
-        $(this).text(Number($(this).text()) + 1);
-      }
-      $(this).toggleClass("active");
+  $("[item-div]").each(function (index) {
+    if (index == 0) {
+      $(this).hide();
+      console.log("hiding original" + index);
     } else {
-      wall("Sign up to upvote " + $(this).attr("item-name") + ".");
+      console.log("changing clone" + index);
+      $(this).attr("item-clone", "true");
+      $(this).removeAttr("item-original");
+      $(this)
+        .find("[item-name]")
+        .text(selected.collection_items[index - 1].name);
+      $(this)
+        .find("[item-name]")
+        .attr("href", selected.collection_items[index - 1].link);
+      $(this)
+        .find("[item-delete]")
+        .attr("item", selected.collection_items[index - 1].id);
+      $(this).find("[item-delete]").attr("collection", selected.collection_id);
+
+      $(this)
+        .find("[item-dropdown]")
+        .attr("id", "dropdown" + selected.collection_items[index - 1].id);
+      $(this)
+        .find("[item-toggle]")
+        .attr("id", "toggle" + selected.collection_items[index - 1].id);
+      $(this)
+        .find("[item-list]")
+        .attr("id", "list" + selected.collection_items[index - 1].id);
+
+      $(this)
+        .find("[item-delete]")
+        .click(function () {
+          var collection = $(this).attr("collection");
+          selected.id = $(this).attr("item");
+          updateCollection("remove", collection, "unset", "unset", "unset");
+        });
+
+      $(this).fadeIn(index * 50);
     }
   });
+}
 
-  $("[collect-div]").click(function () {
-    if (memberstack.isAuthenticated) {
-      var id = $(this).attr("item-id");
-      var name = $(this).attr("item-name");
-      var link = $(this).attr("item-link");
-      selectItem(id, name, link, "collect");
+$("[view-collections-close]").click(function () {
+  hideBottomBar();
+});
 
-      if (collection_data.length > 0) {
-        if (edit) {
-          console.log("adding" + id);
-          updateCollection("add", edit, "unset", "unset", "unset");
-          $("[add-item-button]").hide();
-        } else {
-          listCollections();
-          $("[bottom-bar]").fadeIn(200);
-          $("[bar-view-collections]").slideDown();
-        }
+$("[back-to-collections]").click(function () {
+  setEdit("");
+  $("[bar-edit-collection]").hide();
+  $("[bar-view-collections]").fadeIn(300);
+  listCollections();
+});
+
+$("[edit-collection-close]").click(function () {
+  setEdit("");
+  hideBottomBar();
+});
+
+$("[add-item-button]").click(function () {
+  var id = $(this).attr("add-item-button");
+  console.log("adding" + id);
+  updateCollection("add", id, "unset", "unset", "unset");
+  $("[add-item-button]").hide();
+});
+
+$("[rate-value]").click(function () {
+  var value = $(this).attr("rate-value");
+  console.log("rate-value clicked" + value);
+
+  $(this)
+    .closest("[rate-check-div]")
+    .find(".rate-check")
+    .each(function (index) {
+      var rate = $(this);
+      var number = rate.find("[rate-value]").attr("rate-value");
+      var button = rate.find(".rate-check-button");
+      if (number < value + 1) {
+        rate.removeClass("grey");
       } else {
-        $("[bar-view-collections]").hide();
-        $("[modals-div]").css("display", "flex");
-        $("[modal-collection]").fadeIn(300);
+        rate.addClass("grey");
+      }
+    });
+  $(this).closest("[rate-check-div]").find("[rate-field]").val(value);
+  $("[rate-submit-btn]").show();
+  $(this).attr("checked", false);
+});
+
+$("[hide-modals]").click(function () {
+  hideModals();
+});
+
+$("[create-collection-button]").click(function () {
+  $("[modals-div]").css("display", "flex");
+  $("[bar-view-collections]").hide();
+  $("[modal-collection]").fadeIn(300);
+});
+
+$("[hide-create-collection]").click(function () {
+  $("[modal-collections]").fadeIn(300);
+  $("[modal-collection]").fadeOut(100);
+});
+
+$("[review-div]").click(function () {
+  var id = $(this).closest("[counter-div]").find("[counter-id]").text();
+  var name = $(this).closest("[counter-div]").find("[counter-name]").text();
+  var link = $(this).closest("[counter-div]").find("[counter-link]").text();
+  selectItem(id, name, link, "review");
+  $("[modals-div]").css("display", "flex");
+  $("[modal-review]").fadeIn(200);
+});
+
+$("[share-div]").click(function () {
+  if (memberstack.isAuthenticated) {
+    shareItem(
+      $(this).attr("item-id"),
+      $(this).attr("item-name"),
+      $(this).attr("item-link"),
+      $(this).attr("item-image")
+    );
+  }
+  $(this).text(Number($(this).text()) + 1);
+  $("[modals-div]").css("display", "flex");
+  $("[modal-share]").fadeIn(200);
+});
+
+$("[vote-div]").click(function () {
+  if (memberstack.isAuthenticated) {
+    voteItem(
+      $(this).attr("item-id"),
+      $(this).attr("item-name"),
+      $(this).attr("item-link")
+    );
+    if ($(this).hasClass("active")) {
+      $(this).text(Number($(this).text()) - 1);
+    } else {
+      $(this).text(Number($(this).text()) + 1);
+    }
+    $(this).toggleClass("active");
+  } else {
+    wall("Sign up to upvote " + $(this).attr("item-name") + ".");
+  }
+});
+
+$("[collect-div]").click(function () {
+  if (memberstack.isAuthenticated) {
+    var id = $(this).attr("item-id");
+    var name = $(this).attr("item-name");
+    var link = $(this).attr("item-link");
+    selectItem(id, name, link, "collect");
+
+    if (collection_data.length > 0) {
+      if (edit) {
+        console.log("adding" + id);
+        updateCollection("add", edit, "unset", "unset", "unset");
+        $("[add-item-button]").hide();
+      } else {
+        listCollections();
+        $("[bottom-bar]").fadeIn(200);
+        $("[bar-view-collections]").slideDown();
       }
     } else {
-      wall("Sign up to add " + $(this).attr("item-name") + " to a collection.");
+      $("[bar-view-collections]").hide();
+      $("[modals-div]").css("display", "flex");
+      $("[modal-collection]").fadeIn(300);
     }
-  });
+  } else {
+    wall("Sign up to add " + $(this).attr("item-name") + " to a collection.");
+  }
+});
 
-  $("#wf-form-edit-collection").submit(function (event) {
-    deleteCollection(selected.collection_id);
-    return false;
-  });
+$("#wf-form-edit-collection").submit(function (event) {
+  deleteCollection(selected.collection_id);
+  return false;
+});
 
-  $("#wf-form-create-collection").submit(function (event) {
-    createCollection(
-      esc($("[create-collection-name]").val()),
-      esc($("[create-collection-description]").val()),
-      $("[create-collection-checkbox]").is(":checked")
-    );
-    $("[create-collection-name]").val("");
-    $("[create-collection-description]").val("");
-    return false;
-  });
+$("#wf-form-create-collection").submit(function (event) {
+  createCollection(
+    esc($("[create-collection-name]").val()),
+    esc($("[create-collection-description]").val()),
+    $("[create-collection-checkbox]").is(":checked")
+  );
+  $("[create-collection-name]").val("");
+  $("[create-collection-description]").val("");
+  return false;
+});
 
-  $("#wf-form-create-review").submit(function (event) {
-    var data = $("#wf-form-create-review")
-      .serializeArray()
-      .reduce(function (obj, item) {
-        obj[item.name] = item.value;
-        return obj;
-      }, {});
-    createReview(
-      data.itemid,
-      data.itemname,
-      data.itemlink,
-      data.quality,
-      data.actionable,
-      data.ease,
-      data.money,
-      data.pros,
-      data.cons
-    );
-    hideModals();
-    resetReview();
-    console.log(data);
-    return false;
-  });
+$("#wf-form-create-review").submit(function (event) {
+  var data = $("#wf-form-create-review")
+    .serializeArray()
+    .reduce(function (obj, item) {
+      obj[item.name] = item.value;
+      return obj;
+    }, {});
+  createReview(
+    data.itemid,
+    data.itemname,
+    data.itemlink,
+    data.quality,
+    data.actionable,
+    data.ease,
+    data.money,
+    data.pros,
+    data.cons
+  );
+  hideModals();
+  resetReview();
+  console.log(data);
+  return false;
+});
 
-  $("[dropdown-votes]").click(function () {
-    listVotes();
-  });
+$("[dropdown-votes]").click(function () {
+  listVotes();
+});
 
-  $("[wall]").click(function () {
-    wall("Sign up to continue.");
-  });
-
+$("[wall]").click(function () {
+  wall("Sign up to continue.");
+});
