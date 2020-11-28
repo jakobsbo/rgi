@@ -1,4 +1,4 @@
-import $ from "jquery";
+
 var vote_data = [];
 var collection_data = [];
 var review_data = [];
