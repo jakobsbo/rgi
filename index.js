@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         }, 1200);
       }
     );
-
+ 
     MemberStack.onReady.then(async function (member) {
       if (memberstack.isAuthenticated) {
         var metadata = await member.getMetaData();
