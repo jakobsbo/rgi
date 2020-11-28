@@ -498,6 +498,13 @@ function listItems() {
   });
 }
 
+
+
+
+
+//jQuery clicks start
+document.addEventListener("DOMContentLoaded", function (event) {
+  
 $("[view-collections-close]").click(function () {
   hideBottomBar();
 });
@@ -673,3 +680,6 @@ $("[dropdown-votes]").click(function () {
 $("[wall]").click(function () {
   wall("Sign up to continue.");
 });
+  
+}//jquery clicks end.
+
