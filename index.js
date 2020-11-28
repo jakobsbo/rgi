@@ -681,5 +681,5 @@ $("[wall]").click(function () {
   wall("Sign up to continue.");
 });
   
-}//jquery clicks end. 
+});//jquery clicks end. 
 
