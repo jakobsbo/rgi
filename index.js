@@ -423,8 +423,6 @@ function editCollection(id) {
   listItems();
 }
 
-window.onload = function () {
-  //your code here
   let inline_timer = null;
   $("#wf-form-edit-collection").on(
     "keyup change paste",
@@ -627,7 +625,7 @@ window.onload = function () {
         $("[modal-collection]").fadeIn(300);
       }
     } else {
-      wall("Sign up to add" + $(this).attr("item-name") + " to a collection.");
+      wall("Sign up to add " + $(this).attr("item-name") + " to a collection.");
     }
   });
 
@@ -678,4 +676,4 @@ window.onload = function () {
   $("[wall]").click(function () {
     wall("Sign up to continue.");
   });
-};
+
